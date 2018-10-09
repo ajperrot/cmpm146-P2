@@ -10,7 +10,7 @@ if len(sys.argv) != 4:
     print("usage: %s map.gif map.mesh.pickle subsample_factor" % sys.argv[0])
     sys.exit(-1)
 
-PROGRAM_NAME, MAP_FILENAME, MESH_FILENAME, SUBSAMPLE = sys.argv
+_, MAP_FILENAME, MESH_FILENAME, SUBSAMPLE = sys.argv
 SUBSAMPLE = int(SUBSAMPLE)
 
 with open(MESH_FILENAME, 'rb') as f:
@@ -46,12 +46,10 @@ def redraw():
         canvas.create_rectangle(y1,x1,y2,x2,outline='pink')
     
         #the following has been commented out until our function returns path as line segments
-        """
         for segment in path:
             x1,y1 = shrink(segment[0])
             x2,y2 = shrink(segment[1])
             canvas.create_line(y1,x1,y2,x2,width=2.0,fill='red')
-        """
 
     if source_point:
         x,y = shrink(source_point)
