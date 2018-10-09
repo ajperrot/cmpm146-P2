@@ -88,6 +88,8 @@ def find_path (source_point, destination_point, mesh):
                     heappush(corner_queue, (distance(current_point, (adj_box[1], adj_box[2])), (adj_box[1], adj_box[2])))
                 if adj_box[3] <= current_box[3]:
                     heappush(corner_queue, (distance(current_point, (adj_box[1], adj_box[3])), (adj_box[1], adj_box[3])))
+                if current_point[1] >= adj_box[2] and current_point[1] <= adj_box[3]:
+                    heappush(corner_queue, (distance(current_point, (adj_box[1], current_point[1])), (adj_box[1], current_point[1])))
             elif current_box[1] == adj_box[0]:
                 if current_box[2] >= adj_box[2]:
                     heappush(corner_queue, (distance(current_point, (current_box[1], current_box[2])), (current_box[1], current_box[2])))
@@ -97,6 +99,8 @@ def find_path (source_point, destination_point, mesh):
                     heappush(corner_queue, (distance(current_point, (adj_box[0], adj_box[2])), (adj_box[0], adj_box[2])))
                 if adj_box[3] <= current_box[3]:
                     heappush(corner_queue, (distance(current_point, (adj_box[0], adj_box[3])), (adj_box[0], adj_box[3])))
+                if current_point[1] >= adj_box[2] and current_point[1] <= adj_box[3]:
+                    heappush(corner_queue, (distance(current_point, (adj_box[0], current_point[1])), (adj_box[0], current_point[1])))
             elif current_box[2] == adj_box[3]:
                 if current_box[0] >= adj_box[0]:
                     heappush(corner_queue, (distance(current_point, (current_box[0], current_box[2])), (current_box[0], current_box[2])))
@@ -106,6 +110,8 @@ def find_path (source_point, destination_point, mesh):
                     heappush(corner_queue, (distance(current_point, (adj_box[0], adj_box[3])), (adj_box[0], adj_box[3])))
                 if adj_box[1] <= current_box[1]:
                     heappush(corner_queue, (distance(current_point, (adj_box[1], adj_box[3])), (adj_box[1], adj_box[3])))
+                if current_point[0] >= adj_box[0] and current_point[0] <= adj_box[1]:
+                    heappush(corner_queue, (distance(current_point, (current_point[0], adj_box[3])), (current_point[0], adj_box[3])))
             elif current_box[3] == adj_box[2]:
                 if current_box[0] >= adj_box[0]:
                     heappush(corner_queue, (distance(current_point, (current_box[0], current_box[3])), (current_box[0], current_box[3])))
@@ -115,6 +121,8 @@ def find_path (source_point, destination_point, mesh):
                     heappush(corner_queue, (distance(current_point, (adj_box[0], adj_box[2])), (adj_box[0], adj_box[2])))
                 if adj_box[1] <= current_box[1]:
                     heappush(corner_queue, (distance(current_point, (adj_box[1], adj_box[2])), (adj_box[1], adj_box[2])))
+                if current_point[0] >= adj_box[0] and current_point[0] <= adj_box[1]:
+                    heappush(corner_queue, (distance(current_point, (current_point[0], adj_box[2])), (current_point[0], adj_box[2])))
             #enqueue the next box at the nearest corner
             adj_dist, adj_point = heappop(corner_queue)
             pathcost = current_dist + adj_dist
@@ -140,4 +148,4 @@ def find_path (source_point, destination_point, mesh):
 
 #calculates euclidean distance between two points
 def distance(p1, p2):
-    return sqrt((p2[0]-p1[0])**2 + (p2[1]+p1[1])**2)
+    return sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
