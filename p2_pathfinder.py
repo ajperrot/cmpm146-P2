@@ -1,6 +1,9 @@
 from math import sqrt
 from heapq import heappop, heappush
 
+TOP, BOTTOM, LEFT, RIGHT = 0, 1, 2, 3
+Y, X = 0, 1
+
 def find_path (source_point, destination_point, mesh):
 
     """
@@ -11,6 +14,7 @@ def find_path (source_point, destination_point, mesh):
         mesh: pathway constraints the path adheres to
             ['boxes']: list of (y1, y2, x1, x2) tuples representing boxes
             ['adj']: dict mapping boxes to list of adjacent boxes
+            y1 = top, y2 = bottom, x1 = left, x2 = right
     Returns:
         A path (list of points) from source_point to destination_point if exists
         A list of boxes explored by the algorithm
@@ -18,6 +22,7 @@ def find_path (source_point, destination_point, mesh):
 
     path = []
     boxes = []
+    #boxCorners = {(topLeft),(topRight),(bottomLeft),(bottomRight)}
 
     #find boxes containing source_point and destination_point and add them to boxes
     source_box = None
@@ -39,6 +44,11 @@ def find_path (source_point, destination_point, mesh):
 
     #implement search from source_point to destination_point, filling boxes, path, and points
 
+    print('y1: ' + str(destination_box[0]))
+    print('y2: ' + str(destination_box[1]))
+    print('x1: ' + str(destination_box[2]))
+    print('x2: ' + str(destination_box[3]))
+
     queue = [(0, 0, source_box, source_point)]
 
     # The dictionary that will be returned with the costs
@@ -50,147 +60,9 @@ def find_path (source_point, destination_point, mesh):
     prev_points[(source_box, source_point)] = (None, None)
 
     while queue:
-        current_est, current_dist, current_box, current_point = heappop(queue)
-        #print(current_dist)
-
-        #add newly visited box to boxes
-        if current_box not in boxes:
-            boxes.append(current_box)
-
-        # Check if current node is the destination
-        if current_box == destination_box:
-
-            # List containing all boxes from source_box to destination_box
-            path = [destination_point, current_point]
-
-            # Go backwards from destination_box until the source using backpointers
-            # and add all the nodes in the shortest path into a list
-            next_box, next_point = prev_points[(current_box, current_point)]
-            while next_box is not None:
-                path.append(next_point)
-                next_box, next_point = prev_points[(next_box, next_point)]
-            break #finish when destination is found
-
-        # Calculate cost from current node to all the adjacent ones
-        for adj_box in mesh['adj'][current_box]:
-            #find what the next point will be and load the current point in prev_points
-            corner_queue = []
-            #entries in corner queue are: ((distace to corner), (y, x))
-            #add relevent corners of current_box to consideration
-            if current_box[0] == adj_box[1]:
-                if current_box[2] >= adj_box[2]:
-                    #these next 4 lines could easily be one function call with a few arguments?
-                    adj_point = (current_box[0], current_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point)) #unsure of how passing data in here would work
-                if current_box[3] <= adj_box[3]:
-                    adj_point = (current_box[0], current_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if adj_box[2] >= current_box[2]:
-                    adj_point = (adj_box[1], adj_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if adj_box[3] <= current_box[3]:
-                    adj_point = (adj_box[1], adj_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if current_point[1] >= adj_box[2] and current_point[1] <= adj_box[3]:
-                    adj_point = (adj_box[1], current_point[1])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-            elif current_box[1] == adj_box[0]:
-                if current_box[2] >= adj_box[2]:
-                    adj_point = (current_box[1], current_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if current_box[3] <= adj_box[3]:
-                    adj_point = (current_box[1], current_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if adj_box[2] >= current_box[2]:
-                    adj_point = (adj_box[0], adj_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if adj_box[3] <= current_box[3]:
-                    adj_point = (adj_box[0], adj_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if current_point[1] >= adj_box[0] and current_point[1] <= adj_box[3]:
-                    adj_point = (adj_box[0], current_point[1])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-            elif current_box[2] == adj_box[3]:
-                if current_box[0] >= adj_box[0]:
-                    adj_point = (current_box[0], current_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if current_box[1] <= adj_box[1]:
-                    adj_point = (current_box[1], current_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if adj_box[0] >= current_box[0]:
-                    adj_point = (adj_box[0], adj_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if adj_box[1] <= current_box[1]:
-                    adj_point = (adj_box[1], adj_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if current_point[0] >= adj_box[0] and current_point[0] <= adj_box[1]:
-                    adj_point = (current_point[0], adj_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-            elif current_box[3] == adj_box[2]:
-                if current_box[0] >= adj_box[0]:
-                    adj_point = (current_box[0], current_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if current_box[1] <= adj_box[1]:
-                    adj_point = (current_box[1], current_box[3])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if adj_box[0] >= current_box[0]:
-                    adj_point = (adj_box[0], adj_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if adj_box[1] <= current_box[1]:
-                    adj_point = (adj_box[1], adj_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-                if current_point[0] >= adj_box[0] and current_point[0] <= adj_box[1]:
-                    adj_point = (current_point[0], adj_box[2])
-                    adj_dist = distance(current_point, adj_point)
-                    est_dist = adj_dist + distance(adj_point, destination_point)
-                    heappush(corner_queue, (est_dist, adj_dist, adj_point))
-            #enqueue the next box at the nearest corner
-            est_test, adj_dist, adj_point = heappop(corner_queue)
-            pathcost = current_dist + adj_dist
-            est_cost = pathcost + est_test
-            #if the cost is better than previous
-            if (adj_box, adj_point) not in distances or pathcost < distances[(adj_box, adj_point)]:
-                distances[(adj_box, adj_point)] = pathcost
-                prev_points[(adj_box, adj_point)] = (current_box, current_point)
-                heappush(queue, (est_cost, pathcost, adj_box, adj_point))
+        queue, distances, prev_points, boxes, path = aBlood(queue, distances, prev_points, boxes, path, destination_box, destination_point, mesh)
+        if destination_point in path:
+            break
     
     if not path:
         raise Exception("No Path!") #no path found by the end of search
@@ -205,6 +77,91 @@ def find_path (source_point, destination_point, mesh):
     #return
     #print(path)#test
     return lines, boxes
+
+def aBlood(queue, distances, prev_points, boxes, path, destination_box, destination_point, mesh):
+    current_est, current_dist, current_box, current_point = heappop(queue)
+    #print(current_dist)
+
+    #add newly visited box to boxes
+    if current_box not in boxes:
+        boxes.append(current_box)
+
+    # Check if current node is the destination
+    if current_box == destination_box:
+
+        # List containing all boxes from source_box to destination_box
+        path = [destination_point, current_point]
+
+        # Go backwards from destination_box until the source using backpointers
+        # and add all the nodes in the shortest path into a list
+        next_box, next_point = prev_points[(current_box, current_point)]
+        while next_box is not None:
+            path.append(next_point)
+            next_box, next_point = prev_points[(next_box, next_point)]
+        return (queue, distances, prev_points, boxes, path) #finish when destination is found
+
+    # Calculate cost from current node to all the adjacent ones
+    for adj_box in mesh['adj'][current_box]:
+        #find what the next point will be and load the current point in prev_points
+        corner_queue = []
+        #entries in corner queue are: ((distace to corner), (y, x))
+        #add relevent corners of current_box to consideration
+        if current_box[TOP] == adj_box[BOTTOM]:
+            verticalQueue(current_box, adj_box, current_point, destination_point, corner_queue, adj_box)
+        elif current_box[BOTTOM] == adj_box[TOP]:
+            verticalQueue(adj_box, current_box, current_point, destination_point, corner_queue, adj_box)
+        elif current_box[LEFT] == adj_box[RIGHT]:
+            horizontalQueue(current_box, adj_box, current_point, destination_point, corner_queue, adj_box)
+        elif current_box[RIGHT] == adj_box[LEFT]:
+            horizontalQueue(adj_box, current_box, current_point, destination_point, corner_queue, adj_box)
+        #enqueue the next box at the nearest corner
+        est_test, adj_dist, adj_point = heappop(corner_queue)
+        pathcost = current_dist + adj_dist
+        est_cost = pathcost + est_test
+        #if the cost is better than previous
+        if (adj_box, adj_point) not in distances or pathcost < distances[(adj_box, adj_point)]:
+            distances[(adj_box, adj_point)] = pathcost
+            prev_points[(adj_box, adj_point)] = (current_box, current_point)
+            heappush(queue, (est_cost, pathcost, adj_box, adj_point))
+    return (queue, distances, prev_points, boxes, path)
+
+
+
+def verticalQueue(box1, box2, current, destination, queue, adj):
+    if box1[LEFT] >= box2[LEFT]:
+        enqueueCorner(box1[TOP], box1[LEFT], current, destination, queue)
+    if box1[RIGHT] <= box2[RIGHT]:
+        enqueueCorner(box1[TOP], box1[RIGHT], current, destination, queue)
+    if box2[LEFT] >= box1[LEFT]:
+        enqueueCorner(box2[BOTTOM], box2[LEFT], current, destination, queue)
+    if box2[RIGHT] <= box1[RIGHT]:
+        enqueueCorner(box2[BOTTOM], box2[RIGHT], current, destination, queue)
+    if current[X] >= adj[LEFT] and current[X] <= adj[RIGHT]:
+        enqueueCorner(box1[TOP], current[X], current, destination, queue)
+
+
+
+def horizontalQueue(box1, box2, current, destination, queue, adj):
+    if box1[TOP] >= box2[TOP]:
+        enqueueCorner(box1[TOP], box1[LEFT], current, destination, queue)
+    if box1[BOTTOM] <= box2[BOTTOM]:
+        enqueueCorner(box1[BOTTOM], box1[LEFT], current, destination, queue)
+    if box2[TOP] >= box1[TOP]:
+        enqueueCorner(box2[TOP], box2[RIGHT], current, destination, queue)
+    if box2[BOTTOM] <= box1[BOTTOM]:
+        enqueueCorner(box2[BOTTOM], box2[RIGHT], current, destination, queue)
+    if current[Y] >= adj[TOP] and current[Y] <= adj[BOTTOM]:
+        enqueueCorner(current[Y], box2[RIGHT], current, destination, queue)
+
+
+
+def enqueueCorner(adjY, adjX, current, destination, queue):
+    adj = (adjY, adjX) #adjacent point
+    dist = distance(current, adj) #adjacent distance
+    est = dist + distance(adj, destination) #estimated total distance
+    heappush(queue, (est, dist, adj))
+
+
 
 #calculates euclidean distance between two points
 def distance(p1, p2):
