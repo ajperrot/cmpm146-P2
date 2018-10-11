@@ -20,9 +20,10 @@ def find_path (source_point, destination_point, mesh):
         A list of boxes explored by the algorithm
     """
 
-    path = []
-    boxes = []
-    #boxCorners = {(topLeft),(topRight),(bottomLeft),(bottomRight)}
+    f_path = []
+    b_path = []
+    f_boxes = []
+    b_boxes = []
 
     #find boxes containing source_point and destination_point and add them to boxes
     source_box = None
@@ -43,54 +44,57 @@ def find_path (source_point, destination_point, mesh):
 
 
     #implement search from source_point to destination_point, filling boxes, path, and points
-
-    print('y1: ' + str(destination_box[0]))
-    print('y2: ' + str(destination_box[1]))
-    print('x1: ' + str(destination_box[2]))
-    print('x2: ' + str(destination_box[3]))
-
-    queue = [(0, 0, source_box, source_point)]
+    f_queue = [(0, 0, source_box, source_point)]
+    b_queue = [(0, 0, destination_box, destination_point)]
 
     # The dictionary that will be returned with the costs
-    distances = {}
-    distances[(source_box, source_point)] = 0
+    f_distances = {}
+    f_distances[(source_box, source_point)] = 0
+    b_distances = {}
+    b_distances[(destination_box, destination_point)] = 0
 
     # The dictionary that will store the backpointers
-    prev_points = {}
-    prev_points[(source_box, source_point)] = (None, None)
+    f_prev_points = {}
+    f_prev_points[(source_box, source_point)] = (None, None)
+    b_prev_points = {}
+    b_prev_points[(destination_box, destination_point)] = (None, None)
 
-    while queue:
-        queue, distances, prev_points, boxes, path = aBlood(queue, distances, prev_points, boxes, path, destination_box, destination_point, mesh)
-        if destination_point in path:
+    while f_queue and b_queue:
+        f_queue, f_distances, f_prev_points, f_boxes, f_path = aBlood(f_queue, f_distances, f_prev_points, f_boxes, f_path, destination_point, mesh, b_boxes)
+        if f_path and b_path:
             break
-    
-    if not path:
+        b_queue, b_distances, b_prev_points, b_boxes, b_path = aBlood(b_queue, b_distances, b_prev_points, b_boxes, b_path, source_point, mesh, f_boxes)
+        if f_path and b_path:
+            break
+
+    if not f_path or not b_path:
         raise Exception("No Path!") #no path found by the end of search
     else:
-        path.reverse()
+        path = f_path[::-1] + b_path
+
     
     lines = []
     #fill lines with coordinates of lines connecting all points in path
     for i in range(0, len(path) - 1):
         lines.append( (path[i], path[i+1]) )
 
+    all_boxes = f_boxes + b_boxes
     #return
     #print(path)#test
-    return lines, boxes
+    return lines, all_boxes
 
-def aBlood(queue, distances, prev_points, boxes, path, destination_box, destination_point, mesh):
-    current_est, current_dist, current_box, current_point = heappop(queue)
-    #print(current_dist)
+def aBlood(queue, distances, prev_points, boxes, path, goal_point, mesh, other_boxes):
+    _, current_dist, current_box, current_point = heappop(queue)
 
     #add newly visited box to boxes
     if current_box not in boxes:
         boxes.append(current_box)
 
     # Check if current node is the destination
-    if current_box == destination_box:
+    if current_box in other_boxes:
 
         # List containing all boxes from source_box to destination_box
-        path = [destination_point, current_point]
+        path = [current_point]
 
         # Go backwards from destination_box until the source using backpointers
         # and add all the nodes in the shortest path into a list
@@ -107,13 +111,13 @@ def aBlood(queue, distances, prev_points, boxes, path, destination_box, destinat
         #entries in corner queue are: ((distace to corner), (y, x))
         #add relevent corners of current_box to consideration
         if current_box[TOP] == adj_box[BOTTOM]:
-            verticalQueue(current_box, adj_box, current_point, destination_point, corner_queue, adj_box)
+            verticalQueue(current_box, adj_box, current_point, goal_point, corner_queue, adj_box)
         elif current_box[BOTTOM] == adj_box[TOP]:
-            verticalQueue(adj_box, current_box, current_point, destination_point, corner_queue, adj_box)
+            verticalQueue(adj_box, current_box, current_point, goal_point, corner_queue, adj_box)
         elif current_box[LEFT] == adj_box[RIGHT]:
-            horizontalQueue(current_box, adj_box, current_point, destination_point, corner_queue, adj_box)
+            horizontalQueue(current_box, adj_box, current_point, goal_point, corner_queue, adj_box)
         elif current_box[RIGHT] == adj_box[LEFT]:
-            horizontalQueue(adj_box, current_box, current_point, destination_point, corner_queue, adj_box)
+            horizontalQueue(adj_box, current_box, current_point, goal_point, corner_queue, adj_box)
         #enqueue the next box at the nearest corner
         est_test, adj_dist, adj_point = heappop(corner_queue)
         pathcost = current_dist + adj_dist
